@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-<base target="_top">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>사회복지사 보수교육 대기신청</title>
@@ -238,9 +237,22 @@
   var state = { init:null, me:null, boardTimer:null };
 
   // ───── 서버 호출 ─────
+  // ★ Apps Script 웹 앱 주소(…/exec)를 따옴표 안에 붙여넣으세요 ★
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwWXOxshjYR3jZXKBg-nwtPJnf0k9qBQOKlleoYDT3Y2o4LEkOcKZ_WDROaf5e6ddsi/exec';
+
   function api(fn, arg){
-    return new Promise(function(res, rej){
-      google.script.run.withSuccessHandler(res).withFailureHandler(rej)[fn](arg);
+    if(API_URL.indexOf('/exec') < 0 || API_URL.indexOf('여기에') > -1){
+      return Promise.reject(new Error('API_URL 미설정'));
+    }
+    return fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },   // 사전요청(CORS preflight) 없이 전송
+      body: JSON.stringify({ action: fn, data: arg || {} }),
+      credentials: 'omit',                                       // 구글 로그인 쿠키를 보내지 않음 → 다중 계정 오류 방지
+      redirect: 'follow'
+    }).then(function(r){
+      if(!r.ok) throw new Error('HTTP ' + r.status);
+      return r.json();
     });
   }
   function show(el, text, ok){ el.textContent = text; el.className = 'msg ' + (ok ? 'ok' : 'err'); }
